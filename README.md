@@ -130,11 +130,3 @@ If you use this code in your research, please cite the original paper:
 ```
 [Paper citation information to be added]
 ```
-
-## 🤝 Contributing
-
-This repository contains the complete computational framework for analyzing cardiac fibrillation dynamics. For questions or contributions, please refer to the original research paper or contact the authors.
-
-## 📄 License
-
-This project is licensed under the terms specified in the LICENSE file.
