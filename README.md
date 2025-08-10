@@ -25,19 +25,6 @@ conda activate cardiac_fibrillation
 pip install -r requirements.txt
 ```
 
-### Required Packages
-
-The project requires the following Python packages:
-
-- `numpy==1.26.4` - Numerical computing
-- `scipy==1.10.1` - Scientific computing
-- `matplotlib==3.7.1` - Plotting and visualization
-- `seaborn==0.12.2` - Statistical data visualization
-- `mpl_scatter_density==0.7` - Density scatter plots
-- `dill==0.3.6` - Serialization
-- `ipyparallel==9.0.0` - Parallel computing
-- `sklearn` - Machine learning utilities
-
 ## 📁 Project Structure
 
 ```
@@ -124,6 +111,7 @@ The `figs/` folder contains all original figures from the research paper, organi
    - Run the desired analysis notebook to reproduce specific figures
 
 3. **Explore simulations:**
+
    - Open any simulation's `index.html` file in a web browser
    - Interact with the WebGL applications to explore cardiac dynamics
 
