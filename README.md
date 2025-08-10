@@ -4,13 +4,13 @@ Complete simulation and analysis code to reproduce all figures in the paper, inc
 
 ## 📋 Table of Contents
 
-- [Environment Setup](#environment-setup)
-- [Project Structure](#project-structure)
-- [Analysis Scripts](#analysis-scripts)
-- [Calculation Scripts](#calculation-scripts)
-- [Simulation WebGL Applications](#simulation-webgl-applications)
-- [Figures](#figures)
-- [Usage Instructions](#usage-instructions)
+- [Environment Setup](#-environment-setup)
+- [Project Structure](#-project-structure)
+- [Analysis Scripts](#-analysis-scripts)
+- [Calculation Scripts](#-calculation-scripts)
+- [Simulation WebGL Applications](#-simulation-webgl-applications)
+- [Figures](#-figures)
+- [Usage Instructions](#-usage-instructions)
 
 ## 🔧 Environment Setup
 
