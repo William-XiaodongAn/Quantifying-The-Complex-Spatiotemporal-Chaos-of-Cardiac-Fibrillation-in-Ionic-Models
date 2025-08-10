@@ -1,0 +1,17 @@
+csv
+datetime
+dill==0.3.6
+ipyparallel==9.0.0
+math
+matplotlib==3.7.1
+mpl_scatter_density==0.7
+numpy==1.26.4
+os
+pickle
+random
+scipy==1.10.1
+seaborn==0.12.2
+sklearn
+statistics
+subprocess
+sys
