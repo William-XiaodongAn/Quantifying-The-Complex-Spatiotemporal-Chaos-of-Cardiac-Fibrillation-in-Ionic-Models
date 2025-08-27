@@ -808,7 +808,7 @@ function loadWebGL()
         tipt : false ,
         tiptThreshold : env.tiptThreshold ,
         probeVisible : false ,
-        colorbar : true ,
+        colorbar : false ,
         cblborder: 15 ,
         cbrborder: 15 ,
         unit : '',
