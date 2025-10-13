@@ -1167,12 +1167,6 @@ layout (location = 4) out vec4 ocolor8  ;
 layout (location = 5) out vec4 ocolor9  ; 
 layout (location = 6) out vec4 ocolor10 ; 
 
-// additional outputs for ionic currents (MRT)
-layout (location = 7) out vec4 ocurrent0 ; // INa, Ito, ICaL, ICaNa
-layout (location = 8) out vec4 ocurrent1 ; // ICaK, IKr, IKs, IK1
-layout (location = 9) out vec4 ocurrent2 ; // INaCa, INaK, INab, ICab
-layout (location =10) out vec4 ocurrent3 ; // IKb, IpCa, Isum, 0
-
 
 // Functions/macros for Rush-Larsen time integration .....................
 
@@ -1242,7 +1236,7 @@ void laplacian(sampler2D icolor, out vec2 size, out vec4 l ){
         +   FC2*texture( icolor, cc-2.*jjp) ) 
 
         +2.*(1.-0.5*gamma)*FC0*texture( icolor, cc       ) ; 
-    */        
+    */
     // periodic boundary condition
     
     l = (1.-gamma)*(
@@ -1895,12 +1889,6 @@ void main(){
     ocolor8   = vec4( color8  ) ;
     ocolor9   = vec4( color9  ) ;
     ocolor10  = vec4( color10 ) ;
-
-    // pack currents into additional MRT outputs .........................
-    ocurrent0 = vec4( INa , Ito , ICaL , ICaNa ) ;
-    ocurrent1 = vec4( ICaK, IKr , IKs  , IK1   ) ;
-    ocurrent2 = vec4( INaCa, INaK, INab, ICab  ) ;
-    ocurrent3 = vec4( IKb , IpCa, Isum, 0.0    ) ;
    
     return ;
 }
@@ -2144,13 +2132,6 @@ function loadWebGL(){
     }
     env.colors = [ ...env.fcolors, ...env.scolors ] ;
 
-    // create textures to store ionic currents from comp2 MRT outputs ....
-    env.currents = [
-        new Abubu.Float32Texture(env.width, env.height),
-        new Abubu.Float32Texture(env.width, env.height),
-        new Abubu.Float32Texture(env.width, env.height),
-        new Abubu.Float32Texture(env.width, env.height)
-    ] ;
 
     class OvvrTargets1{
         constructor( colors ){
@@ -2160,17 +2141,10 @@ function loadWebGL(){
         }
     }
     class OvvrTargets2{
-        constructor( colors, currents ){
+        constructor( colors ){
             for ( let i =0 ; i< 7 ; i++){
                 let j=4+i ;
                 this["ocolor"+j] = { location : i, target : colors[j] } ;
-            }
-            // optionally add current attachments if provided
-            if (currents){
-                this["ocurrent0"] = { location : 7 , target : currents[0] } ;
-                this["ocurrent1"] = { location : 8 , target : currents[1] } ;
-                this["ocurrent2"] = { location : 9 , target : currents[2] } ;
-                this["ocurrent3"] = { location : 10, target : currents[3] } ;
             }
         }
     }
@@ -2344,13 +2318,13 @@ function loadWebGL(){
     env.fcomp2 = new Abubu.Solver({
         fragmentShader : source( 'comp2' ) ,
         uniforms : new Comp2Uniforms( env.fcolors, env.scolors ) ,
-        targets : new OvvrTargets2( env.scolors, env.currents ) ,
+        targets : new OvvrTargets2( env.scolors ) ,
     } ) ;
 
     env.scomp2 = new Abubu.Solver({
         fragmentShader : source( 'comp2' ) ,
         uniforms : new Comp2Uniforms( env.scolors, env.fcolors ) ,
-        targets : new OvvrTargets2( env.fcolors, env.currents ) ,
+        targets : new OvvrTargets2( env.fcolors ) ,
     } ) ;
 
     env.comps = [ env.fcomp1, env.fcomp2, env.scomp1, env.scomp2 ] ;
@@ -2607,6 +2581,57 @@ function loadWebGL(){
             }
         }
     };    
+
+    function loadCsvFromGoogleDrive(
+    url = 'https://drive.google.com/file/d/1ZfaiveP4-yJcADq4fdvvnthYaEr27pOC/view?usp=sharing'
+    ) {
+    // Extract file ID
+    const fileIdMatch = url.match(/\/d\/(.*?)\//);
+    if (!fileIdMatch) {
+        console.error("Invalid Google Drive URL:", url);
+        return;
+    }
+    const fileId = fileIdMatch[1];
+
+    // Add confirm=t to bypass virus scan
+    const directUrl = `https://drive.usercontent.google.com/download?id=${fileId}&export=download&confirm=t`;
+
+    // Use proxy if running locally
+    const isLocal = location.protocol === 'file:' || location.origin === 'null';
+    const fetchUrl = isLocal
+        ? `https://corsproxy.io/?${encodeURIComponent(directUrl)}`
+        : directUrl;
+    env.running = false;
+    // Download the file as text
+    fetch(fetchUrl)
+        .then(response => {
+        if (!response.ok) throw new Error("Network error " + response.status);
+        return response.text();
+        })
+        .then(text => {
+        console.log("Loaded CSV length:", text.length);
+
+        // ✅ Create a Blob and File object from the downloaded text
+        const blob = new Blob([text], { type: "text/csv" });
+        const fakeFile = new File([blob], "initial_condition.csv", { type: "text/csv" });
+
+        // ✅ Inject it into env.loadCsvFile.files[0]
+        const dt = new DataTransfer();
+        dt.items.add(fakeFile);
+        env.loadCsvFile.files = dt.files;
+
+        // ✅ Trigger the original onchange handler
+        env.loadCsvFile.onchange();
+        env.running = true;
+        console.log(env.time, text.length);
+
+        })
+        .catch(err => console.error("Failed to load file:", err));
+    }
+
+
+
+
 /*------------------------------------------------------------------------
  * Postprocessing 
  *------------------------------------------------------------------------
@@ -2756,7 +2781,7 @@ function loadWebGL(){
 		}
 	} ) ;
 
-	var tau_pw_will = [0.475,0.5]; //C_Kr 0.3 0.4 0.5 0.6
+	var tau_pw_will = [0.5]; //C_Kr 0.3 0.4 0.5 0.6
 	var tau_d_will = [4]; //C_CaL // 4
 	
 	env.C_CaL = 4
@@ -2780,8 +2805,10 @@ function loadWebGL(){
     env.tiptThreshold = 0.5 ;
     env.tiptThickness= 5 ;
     env.tiptColor = "#FFFFFF";
+    
+    loadCsvFromGoogleDrive() ;
 
-    // now is period bound condition see ln 1223
+    // now is GL_CLAMP_TO_EDGE see ln 1223
     env.run = function(){
         if (env.running){
             for(var i = 0 ; i<env.skip ; i++){
@@ -2936,15 +2963,15 @@ function loadWebGL(){
                     willDataForOnePoint = null;
                     willDataForOnePoint = "";					
 					env.initialize() ;
-                    env.reloadCsvData()
+                    env.reloadCsvData();
 					countWill2 = 0;
 
 					env.C_Kr = tau_pw_will[tau_pw_will_order]
 					env.C_CaL = tau_d_will[tau_d_will_order]
 					
                     Abubu.setUniformInSolvers('C_CaL', env.C_CaL, env.comps) ;
-                    Abubu.setUniformInSolvers('C_Kr', env.C_Kr, env.comps) ;					
-					
+                    Abubu.setUniformInSolvers('C_Kr', env.C_Kr, env.comps) ;
+
 					tau_pw_will_order += 1
 					
 					if (tau_pw_will_order == tau_pw_will.length){

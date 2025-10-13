@@ -2581,36 +2581,77 @@ function loadWebGL(){
             }
         }
     };    
+
+    function loadCsvFromGoogleDrive(
+    url = 'https://drive.google.com/file/d/1ZfaiveP4-yJcADq4fdvvnthYaEr27pOC/view?usp=sharing'
+    ) {
+    // Extract file ID
+    const fileIdMatch = url.match(/\/d\/(.*?)\//);
+    if (!fileIdMatch) {
+        console.error("Invalid Google Drive URL:", url);
+        return;
+    }
+    const fileId = fileIdMatch[1];
+
+    // Add confirm=t to bypass virus scan
+    const directUrl = `https://drive.usercontent.google.com/download?id=${fileId}&export=download&confirm=t`;
+
+    // Use proxy if running locally
+    const isLocal = location.protocol === 'file:' || location.origin === 'null';
+    const fetchUrl = isLocal
+        ? `https://corsproxy.io/?${encodeURIComponent(directUrl)}`
+        : directUrl;
+    env.running = false;
+    // Download the file as text
+    fetch(fetchUrl)
+        .then(response => {
+        if (!response.ok) throw new Error("Network error " + response.status);
+        return response.text();
+        })
+        .then(text => {
+        console.log("Loaded CSV length:", text.length);
+
+        // ✅ Create a Blob and File object from the downloaded text
+        const blob = new Blob([text], { type: "text/csv" });
+        const fakeFile = new File([blob], "initial_condition.csv", { type: "text/csv" });
+
+        // ✅ Inject it into env.loadCsvFile.files[0]
+        const dt = new DataTransfer();
+        dt.items.add(fakeFile);
+        env.loadCsvFile.files = dt.files;
+
+        // ✅ Trigger the original onchange handler
+        env.loadCsvFile.onchange();
+        env.running = true;
+        console.log(env.time, text.length);
+
+        })
+        .catch(err => console.error("Failed to load file:", err));
+    }
+
+
+
+
 /*------------------------------------------------------------------------
  * Postprocessing 
  *------------------------------------------------------------------------
  */
     // voltage plot ------------------------------------------------------
     env.vplot = new Abubu.Plot2D({
-        target      : env.fcolor4 ,
-        prevTarget  : env.scolor4 ,  // Add prevTarget so tipts solver is created
+        target      : env.scolor4 ,
+        prevTarget  : env.fcolor4 ,  // Use scolor1 as previous frame for tip trajectory
         channel     : 'r' ,
         minValue    : -90 ,
         maxValue    : 30 ,
         colorbar    : false ,
         probeVisible: false ,
+        colorbar: true,
         canvas      : document.getElementById('canvas_1') ,
-        tiptThreshold: 0.5 ,
-        tiptVisiblity: true ,
-        tiptThickness: 5 ,
-        //tiptColor    : "#FFFFFF",
+        tiptThickness : 5,
+        tiptThreshold : -20.,
+        //tiptColor   : "#FFFFFF",
     } ) ;
     env.vplot.init() ;
-    
-    // Fix the tip trajectory property mismatch in the online Abubu library
-    // The online version has a bug where setTiptVisiblity sets _pltTipt but updateTipt checks pltTipt
-    const originalSetTiptVisiblity = env.vplot.setTiptVisiblity;
-    env.vplot.setTiptVisiblity = function(tipt) {
-        this.pltTipt = tipt;  // Set the correct property that updateTipt checks
-        this.tipts.setUniform('path', this.pltTipt);
-        this.tiptInit.render();
-    };
-    
     // Set tip trajectory parameters directly
     env.vplot.setTiptThreshold(env.tiptThreshold);
     env.vplot.setTiptThickness(env.tiptThickness);
@@ -2755,6 +2796,8 @@ function loadWebGL(){
     env.tiptThickness= 5 ;
     env.tiptColor = "#FFFFFF";
     
+    loadCsvFromGoogleDrive() ;
+
     // now is GL_CLAMP_TO_EDGE see ln 1223
     env.run = function(){
         if (env.running){
@@ -2905,20 +2948,25 @@ function loadWebGL(){
                     console.log('middle pixel voltage = ' + determine_sustain_value + '\n')
                     
                 }	
+
+                if (env.time > 1840000 ){
+                    env.running = false;
+                }
+
 				if (env.time > 1850200 && tau_d_will_order != tau_d_will.length){ 
 
                     willDataForOnePoint = null;
                     willDataForOnePoint = "";					
 					env.initialize() ;
-                    env.reloadCsvData()
+                    env.reloadCsvData();
 					countWill2 = 0;
 
 					env.C_Kr = tau_pw_will[tau_pw_will_order]
 					env.C_CaL = tau_d_will[tau_d_will_order]
 					
                     Abubu.setUniformInSolvers('C_CaL', env.C_CaL, env.comps) ;
-                    Abubu.setUniformInSolvers('C_Kr', env.C_Kr, env.comps) ;					
-					
+                    Abubu.setUniformInSolvers('C_Kr', env.C_Kr, env.comps) ;
+
 					tau_pw_will_order += 1
 					
 					if (tau_pw_will_order == tau_pw_will.length){
@@ -3039,7 +3087,13 @@ function createGui(){
     tpt.add(env, 'tiptVisiblity')
         .name('Plot Tip Trajectory?')
         .onChange(function(){
-            env.vplot.setTiptVisiblity(env.tiptVisiblity) ;
+            env.vplot.setTiptVisiblity(env.tiptVisiblity);
+            env.refreshDisplay() ;
+        });
+    tpt.add(env, 'tiptThreshold')
+        .name('Tip Threshold [mV]')
+        .onChange(function(){
+            env.vplot.setTiptThreshold(env.tiptThreshold);
             env.refreshDisplay() ;
         });
     tpt.open() ;
