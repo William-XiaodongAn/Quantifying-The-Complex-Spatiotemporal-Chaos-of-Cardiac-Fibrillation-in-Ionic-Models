@@ -42,7 +42,7 @@ var params ;
 var env ;
 var gui ;
 
-var will_length = 512;
+var will_length = 700;
 /*========================================================================
  * createGui
  *========================================================================
@@ -50,6 +50,20 @@ var will_length = 512;
 function createGui(){
     env.gui = new Abubu.Gui() ;
     gui = env.gui.addPanel({width:300}) ;
+    
+env.csvFileName = 'fcolor.csv' ;
+env.saveCsvFile = function(){
+    var link = document.createElement('a') ;
+    var data = "data:text;charset=utf-8," +
+    env.fvfs.width + ',' +
+    env.fvfs.height + ',' +
+    env.fvfs.value.join() ;
+
+    var csv = encodeURI( data ) ;
+    link.setAttribute( 'href', csv ) ;
+    link.setAttribute( 'download', env.csvFileName ) ;
+    link.click() ;
+}
 
 /*-------------------------------------------------------------------------
  * Model Parameters
@@ -183,6 +197,7 @@ function createGui(){
  */
     var svePrmFldr = gui.addFolder('Save Canvases') ;
     svePrmFldr.add( env, 'savePlot2DPrefix').name('File Name Prefix') ;
+    svePrmFldr.add( env, 'saveCsvFile' ) ;
     svePrmFldr.add( env, 'savePlot2D' ) ;
     
     svePrmFldr.open() ;
