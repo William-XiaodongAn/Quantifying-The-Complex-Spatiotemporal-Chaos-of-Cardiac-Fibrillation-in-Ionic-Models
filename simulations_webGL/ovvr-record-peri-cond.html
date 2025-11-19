@@ -2647,28 +2647,20 @@ function loadWebGL(){
         channel     : 'r' ,
         minValue    : -90 ,
         maxValue    : 30 ,
-        colorbar    : false ,
+        colorbar    : true ,
         probeVisible: false ,
         canvas      : document.getElementById('canvas_1') ,
         tiptThreshold: 0.5 ,
         tiptVisiblity: true ,
-        tiptThickness: 5 ,
         //tiptColor    : "#FFFFFF",
     } ) ;
     env.vplot.init() ;
     
     // Fix the tip trajectory property mismatch in the online Abubu library
     // The online version has a bug where setTiptVisiblity sets _pltTipt but updateTipt checks pltTipt
-    const originalSetTiptVisiblity = env.vplot.setTiptVisiblity;
-    env.vplot.setTiptVisiblity = function(tipt) {
-        this.pltTipt = tipt;  // Set the correct property that updateTipt checks
-        this.tipts.setUniform('path', this.pltTipt);
-        this.tiptInit.render();
-    };
     
     // Set tip trajectory parameters directly
     env.vplot.setTiptThreshold(env.tiptThreshold);
-    env.vplot.setTiptThickness(env.tiptThickness);
     env.vplot.setTiptColor(env.tiptColor);
 
     // tplot -------------------------------------------------------------
@@ -2785,12 +2777,12 @@ function loadWebGL(){
 		}
 	} ) ;
     
-	var tau_pw_will = [1.04,1.06,1.08,1.12,1.14]; //C_Kr 0.3 0.4 0.5 0.6
+	var tau_pw_will = [1.09,1.11]; //C_Kr 0.3 0.4 0.5 0.6
 	var tau_d_will = [4]; //C_CaL // 4
 	
 	env.C_CaL = 4
     Abubu.setUniformInSolvers('C_CaL', env.C_CaL, env.comps) ;
-    env.C_Kr = 1.02;
+    env.C_Kr = 1.06;
     Abubu.setUniformInSolvers('C_Kr', env.C_Kr, env.comps) ;
 
     var tau_pw_will_order = 0;
@@ -3106,6 +3098,12 @@ function createGui(){
         .name('Plot Tip Trajectory?')
         .onChange(function(){
             env.vplot.setTiptVisiblity(env.tiptVisiblity) ;
+            env.refreshDisplay() ;
+        });
+    tpt.add(env, 'tiptThreshold',-50, 30,1 )
+        .name('Tip Threshold')
+        .onChange(function(){
+            env.vplot.setTiptThreshold(env.tiptThreshold) ;
             env.refreshDisplay() ;
         });
     tpt.open() ;
