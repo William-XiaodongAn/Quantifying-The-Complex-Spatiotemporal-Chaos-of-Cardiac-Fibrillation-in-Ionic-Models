@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
   "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<svg xmlns:xlink="http://www.w3.org/1999/xlink" width="316.867143pt" height="198.92pt" viewBox="0 0 316.867143 198.92" xmlns="http://www.w3.org/2000/svg" version="1.1">
+<svg xmlns:xlink="http://www.w3.org/1999/xlink" width="248.205714pt" height="198.92pt" viewBox="0 0 248.205714 198.92" xmlns="http://www.w3.org/2000/svg" version="1.1">
  <metadata>
   <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
    <cc:Work>
     <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
-    <dc:date>2025-11-19T16:52:19.451154</dc:date>
+    <dc:date>2025-11-19T23:12:56.140182</dc:date>
     <dc:format>image/svg+xml</dc:format>
     <dc:creator>
      <cc:Agent>
@@ -22,8 +22,8 @@
  <g id="figure_1">
   <g id="patch_1">
    <path d="M 0 198.92 
-L 316.867143 198.92 
-L 316.867143 0 
+L 248.205714 198.92 
+L 248.205714 0 
 L 0 0 
 L 0 198.92 
 z
@@ -31,14 +31,13 @@ z
   </g>
   <g id="axes_1">
    <g id="line2d_1">
-    <path d="M 14.403052 79.316701 
-L 86.418312 173.702554 
-L 158.433571 10.800074 
-L 230.448831 42.799439 
-L 302.464091 82.165013 
-" clip-path="url(#p1c883291f8)" style="fill: none; stroke: #000000; stroke-width: 5; stroke-linecap: square"/>
+    <path d="M 11.282078 92.962422 
+L 86.495931 124.974657 
+L 161.709784 140.973114 
+L 236.923636 154.355846 
+" clip-path="url(#pecb7332aa3)" style="fill: none; stroke: #000000; stroke-width: 5; stroke-linecap: square"/>
     <defs>
-     <path id="m73fbb3ac05" d="M 0 7.5 
+     <path id="mf570f4b4aa" d="M 0 7.5 
 C 1.989023 7.5 3.896849 6.709753 5.303301 5.303301 
 C 6.709753 3.896849 7.5 1.989023 7.5 0 
 C 7.5 -1.989023 6.709753 -3.896849 5.303301 -5.303301 
@@ -50,19 +49,18 @@ C -3.896849 6.709753 -1.989023 7.5 0 7.5
 z
 " style="stroke: #000000"/>
     </defs>
-    <g clip-path="url(#p1c883291f8)">
-     <use xlink:href="#m73fbb3ac05" x="14.403052" y="79.316701" style="fill: #ffb88c; stroke: #000000"/>
-     <use xlink:href="#m73fbb3ac05" x="86.418312" y="173.702554" style="fill: #ffb88c; stroke: #000000"/>
-     <use xlink:href="#m73fbb3ac05" x="158.433571" y="10.800074" style="fill: #ffb88c; stroke: #000000"/>
-     <use xlink:href="#m73fbb3ac05" x="230.448831" y="42.799439" style="fill: #ffb88c; stroke: #000000"/>
-     <use xlink:href="#m73fbb3ac05" x="302.464091" y="82.165013" style="fill: #ffb88c; stroke: #000000"/>
+    <g clip-path="url(#pecb7332aa3)">
+     <use xlink:href="#mf570f4b4aa" x="11.282078" y="92.962422" style="fill: #ffb88c; stroke: #000000"/>
+     <use xlink:href="#mf570f4b4aa" x="86.495931" y="124.974657" style="fill: #ffb88c; stroke: #000000"/>
+     <use xlink:href="#mf570f4b4aa" x="161.709784" y="140.973114" style="fill: #ffb88c; stroke: #000000"/>
+     <use xlink:href="#mf570f4b4aa" x="236.923636" y="154.355846" style="fill: #ffb88c; stroke: #000000"/>
     </g>
    </g>
   </g>
  </g>
  <defs>
-  <clipPath id="p1c883291f8">
-   <rect x="0" y="0" width="316.867143" height="198.92"/>
+  <clipPath id="pecb7332aa3">
+   <rect x="0" y="0" width="248.205714" height="198.92"/>
   </clipPath>
  </defs>
 </svg>
