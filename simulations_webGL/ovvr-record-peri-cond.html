@@ -1215,7 +1215,7 @@ void laplacian(sampler2D icolor, out vec2 size, out vec4 l ){
     float gamma = 1./3. ;
 
     // GL_CLAMP_TO_EDGE boundary condition
-    /*
+    
     l = (1.-gamma)*(
             FC2*texture( icolor, cc+2.*ii) 
         +   FC1*texture( icolor, cc+   ii) 
@@ -1236,9 +1236,9 @@ void laplacian(sampler2D icolor, out vec2 size, out vec4 l ){
         +   FC2*texture( icolor, cc-2.*jjp) ) 
 
         +2.*(1.-0.5*gamma)*FC0*texture( icolor, cc       ) ; 
-    */
-    // periodic boundary condition
     
+    // periodic boundary condition
+    /*
     l = (1.-gamma)*(
             FC2*texture( icolor, fract(cc+2.*ii)) 
         +   FC1*texture( icolor, fract(cc+   ii)) 
@@ -1259,7 +1259,7 @@ void laplacian(sampler2D icolor, out vec2 size, out vec4 l ){
         +   FC2*texture( icolor, fract(cc-2.*jjp)) ) 
 
         +2.*(1.-0.5*gamma)*FC0*texture( icolor, cc       ) ; 
-    
+    */
     return ;
 }
 
@@ -3003,7 +3003,7 @@ function saveCsvFile(willDataForOnePoint, tau_pw, tau_r, lya_type) {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
 
-    const name_download = 'C_Kr_' + tau_pw +  '_C_CaL_' + tau_r + lya_type + '_APD_step_' + (2 * env.skip * env.dt) + '.csv';
+    const name_download = '_C_CaL_' + tau_pw +  '_C_Kr_' + tau_r + lya_type + '_APD_step_' + (2 * env.skip * env.dt) + '.csv';
 
     link.href = url;
     link.download = name_download;

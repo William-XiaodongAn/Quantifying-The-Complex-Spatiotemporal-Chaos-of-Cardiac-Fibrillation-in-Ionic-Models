@@ -1215,7 +1215,7 @@ void laplacian(sampler2D icolor, out vec2 size, out vec4 l ){
     float gamma = 1./3. ;
 
     // GL_CLAMP_TO_EDGE boundary condition
-
+    
     l = (1.-gamma)*(
             FC2*texture( icolor, cc+2.*ii) 
         +   FC1*texture( icolor, cc+   ii) 
@@ -1236,7 +1236,7 @@ void laplacian(sampler2D icolor, out vec2 size, out vec4 l ){
         +   FC2*texture( icolor, cc-2.*jjp) ) 
 
         +2.*(1.-0.5*gamma)*FC0*texture( icolor, cc       ) ; 
-            
+    
     // periodic boundary condition
     /*
     l = (1.-gamma)*(
@@ -2450,20 +2450,25 @@ function loadWebGL(){
  */
 
     // save file .........................................................
-    env.savePlot2D    = function(){
-        //this.running = false ;
-        var prefix ;
-        try{
-            prefix = eval(env.savePlot2DPrefix) ;
-        }catch(e){
-            prefix = this.savePlot2DPrefix ;
+    env.savePlot2D = function() {
+        var prefix;
+        try {
+            prefix = eval(env.savePlot2DPrefix);
+        } catch (e) {
+            prefix = this.savePlot2DPrefix;
         }
-        Abubu.saveCanvas( 'canvas_1',
-        {
-            prefix  : prefix,
-            format  : 'png'
-        } ) ;
-    }
+
+        // format time safely (e.g., integer or with ms)
+        const t = Math.floor(env.time); // or use env.time.toFixed(0) if needed
+        const fileName = `${prefix}_${t}ms.png`;
+
+        Abubu.saveCanvas('canvas_1', {
+            prefix: prefix,
+            name: fileName,  // use env.time in name
+            format: 'png'
+        });
+    };
+
     env.csvFileName = 'colorsSets_0_10.csv' ;
     env.saveCsvFile = function(){
         var link = document.createElement('a') ;
@@ -2597,10 +2602,9 @@ function loadWebGL(){
     const directUrl = `https://drive.usercontent.google.com/download?id=${fileId}&export=download&confirm=t`;
 
     // Use proxy if running locally
-    const isLocal = location.protocol === 'file:' || location.origin === 'null';
-    const fetchUrl = isLocal
-        ? `https://corsproxy.io/?${encodeURIComponent(directUrl)}`
-        : directUrl;
+    const isLocal = location.hostname === 'localhost' || location.protocol === 'file:' || location.origin === 'null';
+    const fetchUrl = `https://corsproxy.io/?${encodeURIComponent(directUrl)}`;
+
     env.running = false;
     // Download the file as text
     fetch(fetchUrl)
@@ -2638,23 +2642,25 @@ function loadWebGL(){
  */
     // voltage plot ------------------------------------------------------
     env.vplot = new Abubu.Plot2D({
-        target      : env.scolor4 ,
-        prevTarget  : env.fcolor4 ,  // Use scolor1 as previous frame for tip trajectory
+        target      : env.fcolor4 ,
+        prevTarget  : env.scolor4 ,  // Add prevTarget so tipts solver is created
         channel     : 'r' ,
         minValue    : -90 ,
         maxValue    : 30 ,
-        colorbar    : false ,
+        colorbar    : true ,
         probeVisible: false ,
-        colorbar: true,
         canvas      : document.getElementById('canvas_1') ,
-        tiptThickness : 5,
-        tiptThreshold : -20.,
-        //tiptColor   : "#FFFFFF",
+        tiptThreshold: 0.5 ,
+        tiptVisiblity: true ,
+        //tiptColor    : "#FFFFFF",
     } ) ;
     env.vplot.init() ;
+    
+    // Fix the tip trajectory property mismatch in the online Abubu library
+    // The online version has a bug where setTiptVisiblity sets _pltTipt but updateTipt checks pltTipt
+    
     // Set tip trajectory parameters directly
     env.vplot.setTiptThreshold(env.tiptThreshold);
-    env.vplot.setTiptThickness(env.tiptThickness);
     env.vplot.setTiptColor(env.tiptColor);
 
     // tplot -------------------------------------------------------------
@@ -2770,13 +2776,13 @@ function loadWebGL(){
 			ocolor : { location : 0 , target : env.sample } ,
 		}
 	} ) ;
-
-	var tau_pw_will = []; //C_Kr 0.3 0.4 0.5 0.6
-	var tau_d_will = [4]; //C_CaL // 4
+    
+	var tau_pw_will = [0.45]; //C_Kr 0.3 0.4 0.5 0.6
+	var tau_d_will = [8,9]; //C_CaL // 4
 	
-	env.C_CaL = 4
+	env.C_CaL = 7
     Abubu.setUniformInSolvers('C_CaL', env.C_CaL, env.comps) ;
-    env.C_Kr = 0.5
+    env.C_Kr = 0.45;
     Abubu.setUniformInSolvers('C_Kr', env.C_Kr, env.comps) ;
 
     var tau_pw_will_order = 0;
@@ -2798,7 +2804,8 @@ function loadWebGL(){
     
     loadCsvFromGoogleDrive() ;
 
-    var pause_for_tip = true;
+
+
     // now is GL_CLAMP_TO_EDGE see ln 1223
     env.run = function(){
         if (env.running){
@@ -2815,7 +2822,10 @@ function loadWebGL(){
                     //env.fireCornerClick() ;
                     //env.nextCornerClickTime += env.pacePeriod ;
                 //}
-
+                
+                sustainability_test(700000)
+                sustainability_test(750000)
+                sustainability_test(800000)
 				
 				countWill2 += 1
 
@@ -2936,24 +2946,6 @@ function loadWebGL(){
                 }
 					// test sustainability
 
-                if (env.time > 1830000 && env.time < 1830000 + 2.0*env.dt){
-                    
-                    var determine_sustain_value = 0;
-                    
-                    for (var pixel_loc = 0; pixel_loc < 64; pixel_loc++) { // 8*8 = 64 pixels
-                        determine_sustain_value += env.sample.value[pixel_loc*4];
-                    }						
-                    
-                    determine_sustain_value  = determine_sustain_value / 100;
-                    
-                    console.log('middle pixel voltage = ' + determine_sustain_value + '\n')
-                    
-                }	
-
-                if (env.time > 1840000 && pause_for_tip){
-                    env.running = false;
-                    pause_for_tip = false;
-                }
 
 				if (env.time > 1850200 && tau_d_will_order != tau_d_will.length){ 
 
@@ -2988,14 +2980,30 @@ function loadWebGL(){
 	env.initialize() ;
 	env.run() ;
 }
-
+function sustainability_test(time){
+    if (env.time > time && env.time < time + 2.0*env.dt){
+        
+        var determine_sustain_value = 0;
+        
+        for (var pixel_loc = 0; pixel_loc < 64; pixel_loc++) { // 8*8 = 64 pixels
+            determine_sustain_value += env.sample.value[pixel_loc*4];
+        }						
+        
+        determine_sustain_value  = determine_sustain_value / 100;
+        console.log('middle pixel voltage = ' + determine_sustain_value + '\n')
+        if (determine_sustain_value < -50){
+            env.running = false;
+        }
+        env.savePlot2D();
+    }	
+}
 function saveCsvFile(willDataForOnePoint, tau_pw, tau_r, lya_type) {
     const blob = new Blob([willDataForOnePoint], { type: 'text/csv;charset=utf-8' });
 
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
 
-    const name_download = 'C_Kr_' + tau_pw +  '_C_CaL_' + tau_r + lya_type + '_APD_step_' + (2 * env.skip * env.dt) + '.csv';
+    const name_download = '_C_CaL_' + tau_pw +  '_C_Kr_' + tau_r + lya_type + '_APD_step_' + (2 * env.skip * env.dt) + '.csv';
 
     link.href = url;
     link.download = name_download;
@@ -3089,13 +3097,13 @@ function createGui(){
     tpt.add(env, 'tiptVisiblity')
         .name('Plot Tip Trajectory?')
         .onChange(function(){
-            env.vplot.setTiptVisiblity(env.tiptVisiblity);
+            env.vplot.setTiptVisiblity(env.tiptVisiblity) ;
             env.refreshDisplay() ;
         });
-    tpt.add(env, 'tiptThreshold')
-        .name('Tip Threshold [mV]')
+    tpt.add(env, 'tiptThreshold',-50, 30,1 )
+        .name('Tip Threshold')
         .onChange(function(){
-            env.vplot.setTiptThreshold(env.tiptThreshold);
+            env.vplot.setTiptThreshold(env.tiptThreshold) ;
             env.refreshDisplay() ;
         });
     tpt.open() ;
