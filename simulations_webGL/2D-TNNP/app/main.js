@@ -774,7 +774,7 @@ sample shader
     // const allData = readAllPixels(env.sample);
     // console.log(allData);
     env.CaLListIdx = 0;
-    env.CaLList = [0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4]
+    env.CaLList = [0.5,0.5,0.5,0.5]
     env.changeCal = function(newC_CaL) {
         env.C_CaL = newC_CaL;
         ComputeGL.setUniformInSolvers('C_CaL', env.C_CaL, [env.comp1, env.comp2]);
