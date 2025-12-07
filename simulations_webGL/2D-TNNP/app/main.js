@@ -775,7 +775,7 @@ sample shader
     // console.log(allData);
     env.CaLListIdx = 0;
     env.CaLList = [0.6,0.6,0.6,0.6,0.6,0.7,0.7,0.7,0.7,0.7,0.8,0.8,0.8,0.8,0.8,
-                    0.9,0.9,0.9,0.9,0.9,1.0,1.0,1.0,1.0,1.0];
+                    0.9,0.9,0.9,0.9,0.9,1.0,1.0,1.0,1.0,1.0,1.0];
     env.prevCal = 0.6
     env.changeCal = function(newC_CaL) {
         env.C_CaL = newC_CaL;
@@ -794,6 +794,7 @@ sample shader
             for(var i=0 ; i< env.frameRate/120 ; i++){
                 k += 1;
                 if (env.time >= 340000){
+                    saveCsvFile(env.CaLData,`C_CaL_${env.C_CaL}_32e4_8_8_APD_step_${env.skip * env.dt*2}.csv`);
                     env.savePlot2DPrefix = `ry_${env.ry}`
                     env.savePlot2D() ;
                     env.running = true ;
@@ -806,7 +807,6 @@ sample shader
                     env.CaLListIdx += 1;
                     env.ry -= 0.0015;
                     env.breakVlt.setUniform('ry', env.ry) ;
-                    saveCsvFile(env.CaLData,`C_CaL_${env.C_CaL}_32e4_8_8_APD_step_${env.skip * env.dt*2}.csv`);
                     env.CaLData = '';
                     if (env.CaLListIdx >= env.CaLList.length) {
                         env.running = false;
