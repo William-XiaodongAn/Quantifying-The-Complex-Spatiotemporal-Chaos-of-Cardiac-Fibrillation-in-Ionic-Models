@@ -774,8 +774,8 @@ sample shader
     // const allData = readAllPixels(env.sample);
     // console.log(allData);
     env.CaLListIdx = 0;
-    env.CaLList = [0.65,0.65,0.65,0.65,0.65,0.75,0.75,0.75,0.75,0.75,0.85,0.85,0.85,0.85,0.85,
-                    0.95,0.95,0.95,0.95,0.95,1.5,1.5,1.5,1.5,1.5,1.5];
+    env.CaLList = [0.61,0.61,0.61,0.61,0.61,0.62,0.62,0.62,0.62,0.62,0.63,0.63,0.63,0.63,0.63,
+                    0.64,0.64,0.64,0.64,0.64,0.66,0.66,0.66,0.66,0.66,0.67,0.67,0.67,0.67,0.67];
     env.prevCal = 0.65
     env.changeCal = function(newC_CaL) {
         env.C_CaL = newC_CaL;
