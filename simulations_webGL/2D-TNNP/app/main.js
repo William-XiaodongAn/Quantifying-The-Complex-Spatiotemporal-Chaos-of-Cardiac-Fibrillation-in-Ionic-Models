@@ -774,14 +774,15 @@ sample shader
     // const allData = readAllPixels(env.sample);
     // console.log(allData);
     env.CaLListIdx = 0;
-    env.CaLList = [0.61,0.61,0.61,0.61,0.61,0.62,0.62,0.62,0.62,0.62,0.63,0.63,0.63,0.63,0.63,
-                    0.64,0.64,0.64,0.64,0.64,0.66,0.66,0.66,0.66,0.66,0.67,0.67,0.67,0.67,0.67];
-    env.prevCal = 0.65
+    env.CaLList = [0.62,0.62,0.62,0.63,0.63,0.63,0.63,0.63,
+                    0.64,0.64,0.64,0.64,0.69,0.69,0.69,0.69,0.69];
+    env.prevCal = env.CaLList[0];
     env.changeCal = function(newC_CaL) {
         env.C_CaL = newC_CaL;
         ComputeGL.setUniformInSolvers('C_CaL', env.C_CaL, [env.comp1, env.comp2]);
     }
-    env.ry -= 0.003;
+    env.ry = 0.6
+    env.ry -= 0.004;
     env.breakVlt.setUniform('ry', env.ry) ;
     env.changeCal( env.CaLList[env.CaLListIdx] ) ;
     env.CaLListIdx += 1;
@@ -801,11 +802,11 @@ sample shader
                     env.initialize();
                     env.changeCal( env.CaLList[env.CaLListIdx] ) ;
                     if (env.CaLList[env.CaLListIdx] != env.prevCal){
-                        env.ry = 0.5;
+                        env.ry = 0.6;
                     }
                     env.prevCal = env.CaLList[env.CaLListIdx];
                     env.CaLListIdx += 1;
-                    env.ry -= 0.0015;
+                    env.ry -= 0.002;
                     env.breakVlt.setUniform('ry', env.ry) ;
                     env.CaLData = '';
                     if (env.CaLListIdx >= env.CaLList.length) {
