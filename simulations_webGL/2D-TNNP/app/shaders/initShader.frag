@@ -124,7 +124,7 @@ void main() {
                 1.0000              /* f_cass           */
         ) ;
     }
-    if (pixPos.x < 0.2){
+    if (pixPos.x < 0.05){
 
         vrnk.r = 10.0;
     }

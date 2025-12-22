@@ -46,7 +46,8 @@ uniform float   C_CaL,
                 C_to, 
                 C_Kr, 
                 C_Ks, 
-                C_pK ;
+                C_pK,
+                C_tau_f_const ;
 /*------------------------------------------------------------------------
  * It turns out for my current graphics card the maximum number of 
  * drawBuffers is limited to 8 
@@ -262,7 +263,7 @@ void main() {
     float   Af      =   1102.5*exp(-(vv+27.)*(vv+27.)/225.) ;
     float   Bf      =   200./(1.+exp((13.-vv)/10.)) ;
     float   Cf      =   (180./(1.+exp((vv+30.)/10.)))+20. ;
-    float   TAU_F   =   Af+Bf+Cf ;
+    float   TAU_F   =   (Af+Bf+Cf)*C_tau_f_const ;
     float   exptauft=   exp(-dt/TAU_F) ;
 
     sf              =   finft-(finft-sf)*exptauft ;
@@ -594,7 +595,7 @@ void main() {
     
     float gamma = 1./3. ;
     //periodic boundary condition
-
+    /*
     float dVlt2dt = 
         (1.-gamma)*((   texture(inVrnk,fract(cp+ii)).r
                     -   2.0*vrnkC.r
@@ -609,10 +610,10 @@ void main() {
                 +   texture(inVrnk,fract(cp-ii+jj)).r
                 -   4.0*vrnkC.r               )*(cddx + cddy) ;
     dVlt2dt *= diffCoef ;
-    
+    */
 
     // Clamp boundary cond
-    /*
+    
     float dVlt2dt = 
         (1.-gamma)*((   texture(inVrnk,cp+ii).r
                     -   2.0*vrnkC.r
@@ -627,7 +628,7 @@ void main() {
                 +   texture(inVrnk,cp-ii+jj).r
                 -   4.0*vrnkC.r               )*(cddx + cddy) ;
     dVlt2dt *= diffCoef ;
-    */
+    
 /*------------------------------------------------------------------------
  * I_sum
  *------------------------------------------------------------------------

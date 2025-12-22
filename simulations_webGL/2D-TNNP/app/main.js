@@ -60,17 +60,95 @@ function createGui(){
  * Time Coeficients
  *------------------------------------------------------------------------
  */
-//    gui.tcfPrmFldr = gui.addFolder( 'Time Coeficients' ) ;
-//    addCoeficients( gui.tcfPrmFldr, [
-//                                    'C_tau_x1',
-//                                    'C_tau_m',
-//                                    'C_tau_h',
-//                                    'C_tau_j',
-//                                    'C_tau_d',
-//                                    'C_tau_f',
-//                                ] ,
-//                    [env.comp1,env.comp2 ] ) ;
-//    gui.tcfPrmFldr.open() ;
+/*------------------------------------------------------------------------
+ * Model Coefficients (Fig 7 Presets)
+ *------------------------------------------------------------------------
+ */
+    gui.mdlPrmFldr = gui.addFolder( 'Model Coefficients' ) ;
+
+    // 1. Define the Presets (Ratios calculated relative to Normal/Slope 1.1)
+// --- Helper Function: Calculate intermediate parameters using ratio ---
+    function getInterpSlope(targetSlope) {
+        // Define the Start (Slope 1.4) and End (Slope 1.9) parameter sets
+        var start = { slope: 1.4, pCa: 3.0, pK: 0.50, tau_f: 1.5 };
+        var end   = { slope: 1.9, pCa: 7.0, pK: 0.15, tau_f: 2.0 };
+        
+        // 1. Calculate the Ratio 't' (0.0 = Start, 1.0 = End)
+        // Example: For Slope 1.5, t = (1.5 - 1.4) / (1.9 - 1.4) = 0.2 (20%)
+        var t = (targetSlope - start.slope) / (end.slope - start.slope);
+        
+        // Clamp t to ensure we don't go outside limits (0 to 1)
+        t = Math.max(0.0, Math.min(1.0, t));
+
+        // 2. Return the Interpolated Parameter Set
+        return {
+            C_Kr: 1.124,  // Constant in this range
+            C_Ks: 1.125,  // Constant in this range
+            C_Na: 1.0,    // Constant
+            
+            // These values change linearly based on 't'
+            C_pCa:         start.pCa   + t * (end.pCa   - start.pCa),
+            C_pK:          start.pK    + t * (end.pK    - start.pK),
+            C_tau_f_const: start.tau_f + t * (end.tau_f - start.tau_f)
+        };
+    }
+
+    // --- Modified Presets Object ---
+    var presets = {
+        "Slope 1.1 (Normal)": {
+            C_Kr: 1.0,    C_Ks: 1.0,    C_pCa: 1.0,   C_pK: 1.0,    C_tau_f_const: 1.0, C_Na: 1.0
+        },
+        "Slope 0.7": {
+            C_Kr: 0.876,  C_Ks: 0.689,  C_pCa: 0.5,   C_pK: 5.0,    C_tau_f_const: 0.6, C_Na: 1.0
+        },
+        "Slope 1.4": {
+            C_Kr: 1.124,  C_Ks: 1.125,  C_pCa: 3.0,   C_pK: 0.5,    C_tau_f_const: 1.5, C_Na: 1.0
+        },
+        
+        // --- Interpolated Middle Values ---
+        "Slope 1.5 (Threshold)": getInterpSlope(1.5),
+        "Slope 1.6":             getInterpSlope(1.6),
+        "Slope 1.7":             getInterpSlope(1.7),
+        "Slope 1.8":             getInterpSlope(1.8),
+        
+        "Slope 1.9": {
+            C_Kr: 1.124,  C_Ks: 1.125,  C_pCa: 7.0,   C_pK: 0.15,   C_tau_f_const: 2.0, C_Na: 1.0
+        }
+    };
+
+    // 2. Variable to track the dropdown selection
+    env.parameterPreset = "Slope 1.4";
+
+    // 3. Add the Dropdown to GUI
+    gui.mdlPrmFldr.add(env, 'parameterPreset', Object.keys(presets))
+        .name('Slope Preset')
+        .onChange(function(name) {
+            var p = presets[name];
+            // Update all environment variables and GPU uniforms
+            for (var key in p) {
+                env[key] = p[key];
+                ComputeGL.setUniformInSolvers(key, env[key], [env.comp1, env.comp2]);
+            }
+        });
+
+    // 4. Add the individual sliders (using .listen() so they update automatically)
+    var coefs = ['C_Kr', 'C_Ks', 'C_pCa', 'C_pK', 'C_tau_f_const', 'C_Na'];
+    
+    // Helper to create closure for the loop
+    function addListeningSlider(name) {
+         gui.mdlPrmFldr.add(env, name)
+            .min(0.0).max(8.0).step(0.01)
+            .listen() // <--- Critical: Updates slider when dropdown changes
+            .onChange(function(val){
+                ComputeGL.setUniformInSolvers(name, val, [env.comp1, env.comp2]);
+            });
+    }
+
+    for(var i=0; i<coefs.length; i++){
+        addListeningSlider(coefs[i]);
+    }
+    
+    gui.mdlPrmFldr.open() ;
 //
 /*------------------------------------------------------------------------
  * Solver Parameters
@@ -275,8 +353,8 @@ function Environment(){
 
     /* Display Parameters       */
     this.colormap    =   'rainbowHotSpring';
-    this.dispWidth   =   512 ;
-    this.dispHeight  =   512 ;
+    this.dispWidth   =   1000 ;
+    this.dispHeight  =   1000 ;
     this.frameRate   =   2400 ;
     this.timeWindow  =   1000 ;
     this.probeVisiblity = false ;
@@ -286,22 +364,23 @@ function Environment(){
     this.tiptColor    = "#FFFFFF";
 
     /* Solver Parameters        */
-    this.width       =   512 ;
-    this.height      =   512 ;
-    this.dt          =   1.e-1 ;
+    this.width       =   1000 ;
+    this.height      =   1000 ;
+    this.dt          =   0.02 ;
     this.cfl         =   1.0 ;
-    this.ds_x        =   20 ;//12
-    this.ds_y        =   20 ;//12
+    this.ds_x        =   25 ;
+    this.ds_y        =   25 ;
     this.C_Na        =   1. ;
     this.C_NaCa      =   1.0 ;
     this.C_to        =   1.0 ;
-    this.C_CaL       =   0.8 ;
+    this.C_CaL       =   1.0 ;
     this.C_Kr        =   1.0 ;
     this.C_Ks        =   1.0 ;
     this.C_K1        =   1.0 ;
     this.C_NaK       =   1.0 ;
     this.C_bNa       =   1.0 ;
     this.C_pK        =   1.0 ;
+    this.C_tau_f_const = 1.0 ;
     this.C_bCa       =   1.0 ;
     this.C_pCa       =   1.0 ;
     this.C_leak      =   1.0 ;
@@ -343,8 +422,6 @@ function Environment(){
         }
         ComputeGL.saveCanvas( 'canvas_1',
         {
-            number  : this.time ,
-            postfix : '_'+this.colormap ,
             prefix  : prefix,
             format  : 'png'
         } ) ;
@@ -462,6 +539,7 @@ function loadWebGL()
         this.C_NaK      = { type : 'f', value : env.C_NaK       } ;
         this.C_bNa      = { type : 'f', value : env.C_bNa       } ;
         this.C_pK       = { type : 'f', value : env.C_pK        } ;
+        this.C_tau_f_const= { type : 'f', value : env.C_tau_f_const } ;
         this.C_bCa      = { type : 'f', value : env.C_bCa       } ;
         this.C_pCa      = { type : 'f', value : env.C_pCa       } ;
         this.C_leak     = { type : 'f', value : env.C_leak      } ;
@@ -623,7 +701,7 @@ sample shader
             visible: true,
             linewidth : 2,
             timeWindow: env.timeWindow,
-            probePosition : [0.9,0.9] , } ) ;
+            probePosition : [0.5,0.5] , } ) ;
 
 /*------------------------------------------------------------------------
  * disp
@@ -768,21 +846,98 @@ sample shader
 
         return pixelData;
     }
+    function getInterpSlope(targetSlope) {
+        // Define the Start (Slope 1.4) and End (Slope 1.9) parameter sets for interpolation
+        var start = { slope: 1.4, pCa: 3.0, pK: 0.50, tau_f: 1.5 };
+        var end   = { slope: 1.9, pCa: 7.0, pK: 0.15, tau_f: 2.0 };
+        
+        // Calculate the ratio 't' (0.0 at 1.4, 1.0 at 1.9)
+        var t = (targetSlope - start.slope) / (end.slope - start.slope);
+        
+        // Clamp t to ensure we don't go outside limits (0 to 1)
+        t = Math.max(0.0, Math.min(1.0, t));
 
+        // Return the Interpolated Parameter Set
+        return {
+            C_Kr: 1.124, 
+            C_Ks: 1.125, 
+            C_Na: 1.0, 
+            C_pCa:         start.pCa   + t * (end.pCa   - start.pCa),
+            C_pK:          start.pK    + t * (end.pK    - start.pK),
+            C_tau_f_const: start.tau_f + t * (end.tau_f - start.tau_f)
+        };
+    }
+
+    /**
+     * Switches the APD restitution slope parameters and updates GPU uniforms.
+     * Assumes 'env' and 'ComputeGL' objects are globally accessible.
+     * @param {string} slopeKey - The key of the desired slope preset (e.g., "Slope 1.5 (Threshold)").
+     */
+    function setApdSlopePreset(slopeKey) {
+        if (typeof env === 'undefined' || typeof ComputeGL === 'undefined') {
+            console.error("Environment (env) or ComputeGL not defined. Cannot switch preset.");
+            return;
+        }
+        
+        // --- Preset Definitions ---
+        var presets = {
+            "Slope 1.1 (Normal)": { C_Kr: 1.0, C_Ks: 1.0, C_pCa: 1.0, C_pK: 1.0, C_tau_f_const: 1.0, C_Na: 1.0 },
+            "Slope 0.7": { C_Kr: 0.876, C_Ks: 0.689, C_pCa: 0.5, C_pK: 5.0, C_tau_f_const: 0.6, C_Na: 1.0 },
+            "Slope 1.4": { C_Kr: 1.124, C_Ks: 1.125, C_pCa: 3.0, C_pK: 0.5, C_tau_f_const: 1.5, C_Na: 1.0 },
+            
+            "Slope 1.5 (Threshold)": getInterpSlope(1.5),
+            "Slope 1.6": getInterpSlope(1.6),
+            "Slope 1.7": getInterpSlope(1.7),
+            "Slope 1.8": getInterpSlope(1.8),
+            
+            "Slope 1.9": { C_Kr: 1.124, C_Ks: 1.125, C_pCa: 7.0, C_pK: 0.15, C_tau_f_const: 2.0, C_Na: 1.0 }
+        };
+        // --- End Preset Definitions ---
+
+        var p = presets[slopeKey];
+
+        if (!p) {
+            console.error(`Error: Slope preset '${slopeKey}' not found.`);
+            console.log("Available keys:", Object.keys(presets));
+            return;
+        }
+
+        console.log(`Setting APD Slope to: ${slopeKey}`);
+
+        // Update all environment variables and GPU uniforms
+        for (var key in p) {
+            env[key] = p[key];
+            // Send the updated value to the GPU solvers
+            ComputeGL.setUniformInSolvers(key, p[key], [env.comp1, env.comp2]);
+        }
+        
+        // Optional: Update the GUI slider position to reflect the change
+        if (window.gui) {
+            gui.updateDisplay();
+        }
+        
+        console.log("Parameters updated. Remember to re-initialize the simulation: env.initialize()");
+    }
+    function click(x,y){
+        env.click.setUniform('clickPosition',[x,y]) ;        
+        env.click.render() ;
+        env.clickCopy.render() ;
+    }
     // --- USAGE ---
     // Assuming 'env.sample' is your FloatRenderTarget variable name:
     // const allData = readAllPixels(env.sample);
     // console.log(allData);
     env.CaLListIdx = 0;
-    env.CaLList = [0.62,0.62,0.62,0.63,0.63,0.63,0.63,0.63,
-                    0.64,0.64,0.64,0.64,0.69,0.69,0.69,0.69,0.69];
+    env.CaLList = [0.5,0.5,0.5,0.5,0.5,1.5,1.5,1.5,1.5,1.5,2.5,2.5,2.5,2.5,2.5,
+                    3.5,3.5,3.5,3.5,3.5,
+                    4.5,4.5,4.5,4.5,4.5];
     env.prevCal = env.CaLList[0];
     env.changeCal = function(newC_CaL) {
-        env.C_CaL = newC_CaL;
-        ComputeGL.setUniformInSolvers('C_CaL', env.C_CaL, [env.comp1, env.comp2]);
+        env.C_Na = newC_CaL;
+        ComputeGL.setUniformInSolvers('C_Na', env.C_Na, [env.comp1, env.comp2]);
     }
-    env.ry = 0.6
-    env.ry -= 0.004;
+    env.ry = 0.4;
+    env.ry -= 0.04;
     env.breakVlt.setUniform('ry', env.ry) ;
     env.changeCal( env.CaLList[env.CaLListIdx] ) ;
     env.CaLListIdx += 1;
@@ -794,29 +949,33 @@ sample shader
         if (env.running){
             for(var i=0 ; i< env.frameRate/120 ; i++){
                 k += 1;
-                if (env.time >= 340000){
-                    saveCsvFile(env.CaLData,`C_CaL_${env.C_CaL}_32e4_8_8_APD_step_${env.skip * env.dt*2}.csv`);
-                    env.savePlot2DPrefix = `ry_${env.ry}`
+                if (env.time >= 50000){
+                    saveCsvFile(env.CaLData,`C_Na_${env.C_Na}_5e4_8_8_APD_step_${env.skip * env.dt*2}.csv`);
+                    env.savePlot2DPrefix = `C_Na_${env.C_Na}`;
                     env.savePlot2D() ;
+                    console.log('cur Na ', env.C_Na , ' at time ', env.time, ' at ry ', env.ry) ;
                     env.running = true ;
                     env.initialize();
-                    env.changeCal( env.CaLList[env.CaLListIdx] ) ;
-                    if (env.CaLList[env.CaLListIdx] != env.prevCal){
-                        env.ry = 0.6;
-                    }
-                    env.prevCal = env.CaLList[env.CaLListIdx];
-                    env.CaLListIdx += 1;
-                    env.ry -= 0.002;
-                    env.breakVlt.setUniform('ry', env.ry) ;
-                    env.CaLData = '';
                     if (env.CaLListIdx >= env.CaLList.length) {
                         env.running = false;
                         break;
                     }
+                    env.changeCal( env.CaLList[env.CaLListIdx] ) ;
+                    if (env.CaLList[env.CaLListIdx] != env.prevCal){
+                        env.ry = 0.4 ;
+                    }
+                    env.prevCal = env.CaLList[env.CaLListIdx];
+                    env.CaLListIdx += 1;
+                    env.ry -= 0.04;
+                    env.breakVlt.setUniform('ry', env.ry) ;
+                    env.CaLData = '';
+
+                }            
+                if (env.time >= 700 && env.time <= 700 + 2.0*env.dt){
+                    //click(0.3,0.3) ;
                 }
 
-
-                if (env.time < 330000 && env.time > 10000 && k%env.skip == 0 ){
+                if (env.time < 50000 && env.time > 10000 && k%env.skip == 0 ){
                     env.sampler.render() ;
                     let samplerData = readAllPixels(env.sample);
                     env.CaLData += ',' + samplerData;
@@ -825,12 +984,34 @@ sample shader
 
                 env.comp1.render() ;
                 env.comp2.render() ;
-                //env.count_activated_cells.render() ;
 
-                //env.reduceS1.render() ;
-                //env.reduceS2.render() ;  
-                //env.FTE = Probe.get() ;
+                if (k % 10 == 0 ){
+                    env.count_activated_cells.render() ;
 
+                    env.reduceS1.render() ;
+                    env.reduceS2.render() ;  
+                    env.FTE = Probe.get() ;
+                    if (env.FTE < 0.05 && env.time > 1000){
+                        env.running = false ;
+                        console.log('cur Na ', env.C_Na , ' at time ', env.time, ' at ry ', env.ry);
+                        env.running = true ;
+                        env.initialize();
+                        env.changeCal( env.CaLList[env.CaLListIdx] ) ;
+                        if (env.CaLList[env.CaLListIdx] != env.prevCal){
+                            env.ry = 0.3 ;
+                        }
+                        env.prevCal = env.CaLList[env.CaLListIdx];
+                        env.CaLListIdx += 1;
+                        env.ry -= 0.04;
+                        env.breakVlt.setUniform('ry', env.ry) ;
+                        env.CaLData = '';
+                        if (env.CaLListIdx >= env.CaLList.length) {
+                            env.running = false;
+                            break;
+                        }
+                    }
+                }
+                
 
                 env.time += 2.0*env.dt ;
                 env.paceTime += 2.0*env.dt ;
@@ -840,7 +1021,12 @@ sample shader
                 env.disp.updateTipt() ;
             }
             if (env.notBreaked){
-                env.initialBreak() ;
+                if ( env.time > env.breakTime 
+                        && env.notBreaked 
+                        && env.vltBreak     ){
+                    env.breakVltNow() ;
+                }
+                //env.initialBreak() ;
             }
 
             refreshDisplay();
