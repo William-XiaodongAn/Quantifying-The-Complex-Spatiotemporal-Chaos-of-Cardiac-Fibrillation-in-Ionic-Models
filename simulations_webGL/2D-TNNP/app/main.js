@@ -928,15 +928,13 @@ sample shader
     // const allData = readAllPixels(env.sample);
     // console.log(allData);
     env.CaLListIdx = 0;
-    env.CaLList = [0.5,0.5,0.5,0.5,0.5,1.5,1.5,1.5,1.5,1.5,2.5,2.5,2.5,2.5,2.5,
-                    3.5,3.5,3.5,3.5,3.5,
-                    4.5,4.5,4.5,4.5,4.5];
+    env.CaLList = [5.5,5.5,5.5];
     env.prevCal = env.CaLList[0];
     env.changeCal = function(newC_CaL) {
         env.C_Na = newC_CaL;
         ComputeGL.setUniformInSolvers('C_Na', env.C_Na, [env.comp1, env.comp2]);
     }
-    env.ry = 0.4;
+    env.ry = 0.60;
     env.ry -= 0.04;
     env.breakVlt.setUniform('ry', env.ry) ;
     env.changeCal( env.CaLList[env.CaLListIdx] ) ;
@@ -962,7 +960,7 @@ sample shader
                     }
                     env.changeCal( env.CaLList[env.CaLListIdx] ) ;
                     if (env.CaLList[env.CaLListIdx] != env.prevCal){
-                        env.ry = 0.4 ;
+                        env.ry = 0.60 ;
                     }
                     env.prevCal = env.CaLList[env.CaLListIdx];
                     env.CaLListIdx += 1;
