@@ -3,3 +3,4 @@ analysis_ipynb_scripts/APDs_tau_0.pkl
 analysis_ipynb_scripts/APDs_tau_d.pkl
 analysis_ipynb_scripts/APDs_tau_r.pkl
 analysis_ipynb_scripts/APDs_tau_si.pkl
+*.pkl
